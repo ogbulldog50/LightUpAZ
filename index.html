@@ -98,7 +98,7 @@
       L.tileLayer('https://mt1.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}', { maxZoom: 20 })
     ]);
 
-    const map = L.map('map', { center: [33.4652,-112.0780], zoom: 10, layers: [hybrid] });
+    const map = L.map('map', { center: [33.4652,-112.0780], zoom: 10, layers: [roads] });
 
     const baseMaps = {
       "🛰 Satellite": satellite,
@@ -287,6 +287,7 @@ function makeBounceOnClick(marker) {
   </script>
 </body>
 </html>
+
 
 
 
