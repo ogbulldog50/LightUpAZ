@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Light Up Arizona – Map Test</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    html, body, #map { height: 100%; margin: 0; padding: 0; }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+
+  <script>
+    // ===== Base map layers =====
+    const roads = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '© OpenStreetMap contributors'
+    });
+
+    const satellite = L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+      maxZoom: 20,
+      attribution: '© Google Satellite (unofficial)'
+    });
+
+    const hybrid = L.tileLayer('https://mt1.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}', {
+      maxZoom: 20,
+      attribution: '© Google Hybrid (unofficial)'
+    });
+
+    const esriStreets = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 19,
+      attribution: 'Tiles © Esri'
+    });
+
+    const esriImagery = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 19,
+      attribution: 'Imagery © Esri & the GIS User Community'
+    });
+
+    const cartoLight = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+      maxZoom: 19,
+      attribution: '© OpenStreetMap & CARTO'
+    });
+
+    // ===== Initialize map =====
+    const map = L.map('map', {
+      center: [34.0489, -111.0937],
+      zoom: 7,
+      layers: [cartoLight] // Default for testing
+    });
+
+    // ===== Base layer switcher =====
+    const baseMaps = {
+      "🗺 OSM Roads": roads,
+      "🛰 Google Satellite": satellite,
+      "🌎 Google Hybrid": hybrid,
+      "🧭 Esri Streets": esriStreets,
+      "🛰 Esri Imagery": esriImagery,
+      "☀️ Carto Light": cartoLight
+    };
+    L.control.layers(baseMaps).addTo(map);
+
+    // ===== Example marker pull from Sheets (mock or real) =====
+    // Replace with your actual fetch() code or array import
+    const exampleData = [
+      { name: "Sample Display", lat: 33.45, lng: -112.07, desc: "Phoenix area show" }
+    ];
+
+    exampleData.forEach(p => {
+      L.marker([p.lat, p.lng])
+        .addTo(map)
+        .bindPopup(`<b>${p.name}</b><br>${p.desc}`);
+    });
+  </script>
+</body>
+</html>
