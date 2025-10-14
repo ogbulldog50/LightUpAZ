@@ -223,6 +223,7 @@ const markers = [];
           const marker = L.marker([lat, lon], { icon: iconType })
             .addTo(map)
             .bindPopup(html);
+            makeBounceOnClick(marker);
 
           markers.push({ marker, holiday });
         });
@@ -252,44 +253,39 @@ map.on('zoomend', () => {
 
       });
     });
-  // ===== Tap Bounce Animation =====
+ // ===== Tap Bounce Animation (reliable version) =====
 
-// 1️⃣ CSS for the bounce animation
+// 1️⃣ CSS for bounce
 const bounceStyle = document.createElement('style');
 bounceStyle.innerHTML = `
   @keyframes marker-bounce {
     0%   { transform: translateY(0) scale(1); }
-    30%  { transform: translateY(-10px) scale(1.1); }
+    30%  { transform: translateY(-10px) scale(1.15); }
     60%  { transform: translateY(0) scale(1); }
     100% { transform: translateY(0); }
   }
-
-  .emoji-marker.bouncing {
-    animation: marker-bounce 0.4s ease;
-  }
-
-  .leaflet-marker-icon.bouncing {
+  .bouncing {
     animation: marker-bounce 0.4s ease;
   }
 `;
 document.head.appendChild(bounceStyle);
 
-// 2️⃣ Add event listener for all future markers
-map.on('click', (e) => {
-  const icon = e.originalEvent.target;
-  if (!icon) return;
+// 2️⃣ Attach to each marker after creation
+function makeBounceOnClick(marker) {
+  marker.on('click', (e) => {
+    const el = e.target._icon;
+    if (!el) return;
+    el.classList.add('bouncing');
+    setTimeout(() => el.classList.remove('bouncing'), 400);
+  });
+}
 
-  // Apply bounce only to marker elements
-  if (icon.classList.contains('emoji-marker') || icon.classList.contains('leaflet-marker-icon')) {
-    icon.classList.add('bouncing');
-    setTimeout(() => icon.classList.remove('bouncing'), 400);
-  }
-});
 
   
   </script>
 </body>
 </html>
+
 
 
 
