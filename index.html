@@ -197,13 +197,15 @@ const markers = [];
               : '';
           };
 
-          // Pick icon
+          // Pick icon (robust normalization)
+          const markerStyleClean = (markerStyle || '').replace(/[^\w]/g, '').toLowerCase();
           let iconType = icons.Default;
           const key = Object.keys(icons).find(k =>
-            markerStyle.toLowerCase().includes(k.toLowerCase())
+            markerStyleClean.includes(k.toLowerCase())
           );
           if (key) iconType = icons[key];
-          if (name.toLowerCase().includes('prickly guy')) iconType = icons.Prickly; // your logo
+          if (name.toLowerCase().includes('prickly guy')) iconType = icons.Prickly;
+
 
           const html = `
             <div class="popup-content">
@@ -285,6 +287,7 @@ function makeBounceOnClick(marker) {
   </script>
 </body>
 </html>
+
 
 
 
