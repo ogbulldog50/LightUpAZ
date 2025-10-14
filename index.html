@@ -107,32 +107,47 @@
     };
     L.control.layers(baseMaps).addTo(map);
 
-    // ===== Icons =====
-    const size = [52, 52]; // doubled size
-    const icons = {
-      Christmas: L.divIcon({ html: '🎄', className: 'emoji-marker', iconSize: size }),
-      Halloween: L.divIcon({ html: '🎃', className: 'emoji-marker', iconSize: size }),
-      Default:   L.divIcon({ html: '⭐', className: 'emoji-marker', iconSize: size }),
-      Cactus:    L.divIcon({ html: '🌵', className: 'emoji-marker', iconSize: size }),
-      BlueBulb:  L.divIcon({ html: '💡', className: 'emoji-marker', iconSize: size }),
-      RedBulb:   L.divIcon({ html: '❤️', className: 'emoji-marker', iconSize: size }),
-      Snowflake: L.divIcon({ html: '❄️', className: 'emoji-marker', iconSize: size }),
-      Candle:    L.divIcon({ html: '🕯️', className: 'emoji-marker', iconSize: size }),
-      Gift:      L.divIcon({ html: '🎁', className: 'emoji-marker', iconSize: size }),
-      Mittens:   L.divIcon({ html: '🧤', className: 'emoji-marker', iconSize: size }),
-      Disco:     L.divIcon({ html: '🪩', className: 'emoji-marker', iconSize: size }),
-      Bell:      L.divIcon({ html: '🔔', className: 'emoji-marker', iconSize: size }),
-      MapPin:    L.divIcon({ html: '📍', className: 'emoji-marker', iconSize: size }),
-      Reindeer:  L.divIcon({ html: '🦌', className: 'emoji-marker', iconSize: size }),
-      Prickly:   L.icon({
-        iconUrl: 'https://assets.zyrosite.com/cdn-cgi/image/format=auto,w=375,fit=crop,q=95/mePnLngKpEilPJ97/1-removebg-preview-Aq2oqja477SbapQJ.png',
-        iconSize: [50, 50],
-  iconAnchor: [25, 50],
-  popupAnchor: [0, -45], // ← add this line
-}),
-    };
+   // ===== Icons =====
+const size = [52, 52]; // doubled size
+const icons = {
+  Christmas: L.divIcon({ html: '🎄', className: 'emoji-marker', iconSize: size }),
+  Halloween: L.divIcon({ html: '🎃', className: 'emoji-marker', iconSize: size }),
+  Default:   L.divIcon({ html: '⭐', className: 'emoji-marker', iconSize: size }),
+  Cactus:    L.divIcon({ html: '🌵', className: 'emoji-marker', iconSize: size }),
+  BlueBulb:  L.divIcon({ html: '💡', className: 'emoji-marker', iconSize: size }),
+  RedBulb:   L.divIcon({ html: '❤️', className: 'emoji-marker', iconSize: size }),
+  Snowflake: L.divIcon({ html: '❄️', className: 'emoji-marker', iconSize: size }),
+  Candle:    L.divIcon({ html: '🕯️', className: 'emoji-marker', iconSize: size }),
+  Gift:      L.divIcon({ html: '🎁', className: 'emoji-marker', iconSize: size }),
+  Mittens:   L.divIcon({ html: '🧤', className: 'emoji-marker', iconSize: size }),
+  Disco:     L.divIcon({ html: '🪩', className: 'emoji-marker', iconSize: size }),
+  Bell:      L.divIcon({ html: '🔔', className: 'emoji-marker', iconSize: size }),
+  MapPin:    L.divIcon({ html: '📍', className: 'emoji-marker', iconSize: size }),
+  Reindeer:  L.divIcon({ html: '🦌', className: 'emoji-marker', iconSize: size }),
 
-    const markers = [];
+  // --- Your custom logo ---
+  Prickly: L.icon({
+    iconUrl: 'https://assets.zyrosite.com/cdn-cgi/image/format=auto,w=375,fit=crop,q=95/mePnLngKpEilPJ97/1-removebg-preview-Aq2oqja477SbapQJ.png',
+    iconSize: [50, 50],
+    iconAnchor: [25, 50],
+    popupAnchor: [0, -45],
+  }),
+};
+
+// --- Uniform popup offset for all emoji markers ---
+const style = document.createElement('style');
+style.innerHTML = `
+  .emoji-marker {
+    font-size: 36px;
+    line-height: 36px;
+    text-align: center;
+    transform: translateY(10px); /* lowers popup point */
+  }
+`;
+document.head.appendChild(style);
+
+const markers = [];
+
 
     // ===== Fetch Sheet =====
     Papa.parse(sheetUrl, {
@@ -240,6 +255,7 @@ map.on('zoomend', () => {
   </script>
 </body>
 </html>
+
 
 
 
