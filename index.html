@@ -127,8 +127,9 @@
       Prickly:   L.icon({
         iconUrl: 'https://assets.zyrosite.com/cdn-cgi/image/format=auto,w=375,fit=crop,q=95/mePnLngKpEilPJ97/1-removebg-preview-Aq2oqja477SbapQJ.png',
         iconSize: [50, 50],
-        iconAnchor: [30, 60]
-      })
+  iconAnchor: [25, 50],
+  popupAnchor: [0, -45], // ← add this line
+}),
     };
 
     const markers = [];
@@ -239,6 +240,7 @@ map.on('zoomend', () => {
   </script>
 </body>
 </html>
+
 
 
 
