@@ -167,7 +167,8 @@
           // Links
           const rfLink = rf ? `<a href="${rf}" target="_blank">Remote Falcon</a>` : '';
           const pmLink = pm ? `<a href="${pm}" target="_blank">PulseMesh</a>` : '';
-          const fmLine = fm ? `<strong>FM Station: ${fm}</strong>` : '';
+          const fmLine = fm ? `<strong>FM Station: ${fm} FM</strong>` : '';
+
 
 
           const mapsLink = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`;
@@ -238,6 +239,7 @@ map.on('zoomend', () => {
   </script>
 </body>
 </html>
+
 
 
 
