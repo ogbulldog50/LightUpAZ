@@ -1,79 +1,196 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Light Up Arizona – Map Test</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Light Up Arizona – Test Map</title>
+
+  <!-- Leaflet core -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
+
   <style>
-    html, body, #map { height: 100%; margin: 0; padding: 0; }
+    body, html { margin:0; padding:0; height:100%; width:100%; overflow:hidden; }
+    #map { height:100vh; width:100vw; }
+    #filter-bar {
+      position:absolute; top:10px; left:50%; transform:translateX(-50%);
+      z-index:1000; background:rgba(255,255,255,0.9);
+      border-radius:10px; padding:6px 10px;
+      font-family:system-ui; box-shadow:0 2px 4px rgba(0,0,0,0.2);
+    }
+    #filter-bar button {
+      margin:0 4px; padding:4px 10px; border:none; border-radius:6px;
+      cursor:pointer; font-weight:600;
+    }
+    #filter-bar button.active { background:#0f8a7c; color:white; }
+    .popup-content { font-family:system-ui; font-size:14px; line-height:1.4; }
+    .popup-content iframe, .popup-content img {
+      border-radius:10px; margin-top:5px; display:block; width:220px; border:none;
+    }
+    .emoji-marker { font-size:36px; line-height:36px; text-align:center; transform:translateY(10px); }
   </style>
 </head>
 <body>
+  <div id="filter-bar">
+    <button data-filter="All" class="active">🌎 All</button>
+    <button data-filter="Halloween">🎃 Halloween</button>
+    <button data-filter="Christmas">🎄 Christmas</button>
+  </div>
   <div id="map"></div>
 
   <script>
-    // ===== Base map layers =====
-    const roads = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '© OpenStreetMap contributors'
+  // ====== DATA SOURCE ======
+  const sheetUrl = 'https://docs.google.com/spreadsheets/d/1c3Lj6l6bJN3fnhpAxWXkb0C5HW4hGxSWnvsOJXObYz0/gviz/tq?tqx=out:csv';
+
+  // ====== BASE MAPS ======
+  const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom:19, attribution:'© OpenStreetMap'
+  });
+  const cartoLight = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    maxZoom:19, attribution:'© OpenStreetMap & CARTO'
+  });
+  const esriStreets = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+    maxZoom:19, attribution:'Tiles © Esri'
+  });
+  const esriImagery = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    maxZoom:19, attribution:'Imagery © Esri'
+  });
+  const googleSat = L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+    maxZoom:20, attribution:'© Google Satellite (unofficial)'
+  });
+  const googleHybrid = L.tileLayer('https://mt1.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}', {
+    maxZoom:20, attribution:'© Google Hybrid (unofficial)'
+  });
+
+  const baseMaps = {
+    "☀️ Carto Light": cartoLight,
+    "🧭 Esri Streets": esriStreets,
+    "🛰 Esri Imagery": esriImagery,
+    "🗺 OSM Roads": osm,
+    "🛰 Google Satellite": googleSat,
+    "🌎 Google Hybrid": googleHybrid
+  };
+
+  const map = L.map('map', { center:[34.0489,-111.0937], zoom:7, layers:[cartoLight] });
+  L.control.layers(baseMaps).addTo(map);
+
+  // ====== ICONS ======
+  const size=[52,52];
+  const icons={
+    Christmas:L.divIcon({html:'🎄',className:'emoji-marker',iconSize:size}),
+    Halloween:L.divIcon({html:'🎃',className:'emoji-marker',iconSize:size}),
+    Default:L.divIcon({html:'⭐',className:'emoji-marker',iconSize:size}),
+    Prickly:L.icon({
+      iconUrl:'https://assets.zyrosite.com/cdn-cgi/image/format=auto,w=375,fit=crop,q=95/mePnLngKpEilPJ97/1-removebg-preview-Aq2oqja477SbapQJ.png',
+      iconSize:[50,50], iconAnchor:[25,50], popupAnchor:[0,-30]
+    })
+  };
+  const markers=[];
+
+  // ====== FETCH SHEET ======
+  Papa.parse(sheetUrl,{
+    download:true, header:true, skipEmptyLines:true,
+    complete:results=>{
+      const data=results.data;
+      data.forEach(row=>{
+        if(!row['Approval Status']||row['Approval Status'].toLowerCase()!=='approved')return;
+        const lat=parseFloat(row['Latitude']);
+        const lon=parseFloat(row['Longitude']);
+        if(isNaN(lat)||isNaN(lon))return;
+
+        const name=row['Your Display Name'];
+        const address=row['Full Address'];
+        const holiday=(row['Which Holidays Do You Setup For']||'').replace(/\r?\n/g,', ');
+        const desc=row['Show Description']||'';
+        const features=row['Show Features']||'';
+        const fm=row['FM Station']||'';
+        const rf=row['Remote Falcon Page'];
+        const pm=row['PulseMesh Link'];
+        const photo1=row['Photo 1'];
+        const photo2=row['Photo 2'];
+        const markerStyle=row['Marker Style']||'';
+        const mapsLink=`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`;
+
+        const rfLink=rf?`<a href="${rf}" target="_blank">Remote Falcon</a>`:'';
+        const pmLink=pm?`<a href="${pm}" target="_blank">PulseMesh</a>`:'';
+        const fmLine=fm?`<strong>FM Station: ${fm} FM</strong>`:'';
+
+        const embed=url=>{
+          const idMatch=url?.match(/[-\w]{25,}/);
+          return idMatch?`<iframe src="https://drive.google.com/file/d/${idMatch[0]}/preview" width="220" height="160"></iframe>`:'';
+        };
+
+        const markerStyleClean=markerStyle.replace(/[^\w]/g,'').toLowerCase();
+        let iconType=icons.Default;
+        if(markerStyleClean.includes('christmas'))iconType=icons.Christmas;
+        else if(markerStyleClean.includes('halloween'))iconType=icons.Halloween;
+        if(name.toLowerCase().includes('prickly guy'))iconType=icons.Prickly;
+
+        const html=`
+          <div class="popup-content">
+            <b>${name}</b><br>
+            <a href="${mapsLink}" target="_blank">${address}</a><br>
+            ${holiday?`<p><strong>We decorate for:</strong> ${holiday}</p>`:''}
+            ${desc?`<p>${desc}</p>`:''}
+            ${features||fm||rfLink||pmLink?`<p><strong>Features:</strong><br>
+              ${features?features+'<br>':''}
+              ${fmLine?fmLine+'<br>':''}
+              ${rfLink?rfLink+'<br>':''}
+              ${pmLink||''}</p>`:''}
+            ${photo1?embed(photo1):''}
+            ${photo2?embed(photo2):''}
+          </div>`;
+
+        const marker=L.marker([lat,lon],{icon:iconType}).addTo(map).bindPopup(html);
+        makeBounceOnClick(marker);
+        markers.push({marker,holiday});
+      });
+    }
+  });
+
+  // ====== FILTERS ======
+  document.querySelectorAll('#filter-bar button').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      document.querySelectorAll('#filter-bar button').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      const filter=btn.dataset.filter;
+      markers.forEach(({marker,holiday})=>{
+        const show=filter==='All'||holiday.toLowerCase().includes(filter.toLowerCase());
+        if(show)marker.addTo(map); else map.removeLayer(marker);
+      });
     });
+  });
 
-    const satellite = L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
-      maxZoom: 20,
-      attribution: '© Google Satellite (unofficial)'
+  // ====== BOUNCE ANIMATION ======
+  const bounceStyle=document.createElement('style');
+  bounceStyle.innerHTML=`
+    @keyframes marker-bounce {
+      0%{transform:translateY(0)scale(1);}
+      30%{transform:translateY(-10px)scale(1.15);}
+      60%,100%{transform:translateY(0)scale(1);}
+    }
+    .bouncing{animation:marker-bounce .4s ease;}
+  `;
+  document.head.appendChild(bounceStyle);
+  function makeBounceOnClick(marker){
+    marker.on('click',e=>{
+      const el=e.target._icon;
+      if(!el)return;
+      el.classList.add('bouncing');
+      setTimeout(()=>el.classList.remove('bouncing'),400);
     });
+  }
 
-    const hybrid = L.tileLayer('https://mt1.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}', {
-      maxZoom: 20,
-      attribution: '© Google Hybrid (unofficial)'
+  // ====== SCALE EMOJI WITH ZOOM ======
+  map.on('zoomend',()=>{
+    const zoom=map.getZoom();
+    const base=28;
+    const scaled=base+(zoom*1.8);
+    document.querySelectorAll('.emoji-marker').forEach(el=>{
+      el.style.fontSize=`${scaled}px`;
     });
-
-    const esriStreets = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
-      maxZoom: 19,
-      attribution: 'Tiles © Esri'
-    });
-
-    const esriImagery = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-      maxZoom: 19,
-      attribution: 'Imagery © Esri & the GIS User Community'
-    });
-
-    const cartoLight = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-      maxZoom: 19,
-      attribution: '© OpenStreetMap & CARTO'
-    });
-
-    // ===== Initialize map =====
-    const map = L.map('map', {
-      center: [34.0489, -111.0937],
-      zoom: 7,
-      layers: [cartoLight] // Default for testing
-    });
-
-    // ===== Base layer switcher =====
-    const baseMaps = {
-      "🗺 OSM Roads": roads,
-      "🛰 Google Satellite": satellite,
-      "🌎 Google Hybrid": hybrid,
-      "🧭 Esri Streets": esriStreets,
-      "🛰 Esri Imagery": esriImagery,
-      "☀️ Carto Light": cartoLight
-    };
-    L.control.layers(baseMaps).addTo(map);
-
-    // ===== Example marker pull from Sheets (mock or real) =====
-    // Replace with your actual fetch() code or array import
-    const exampleData = [
-      { name: "Sample Display", lat: 33.45, lng: -112.07, desc: "Phoenix area show" }
-    ];
-
-    exampleData.forEach(p => {
-      L.marker([p.lat, p.lng])
-        .addTo(map)
-        .bindPopup(`<b>${p.name}</b><br>${p.desc}`);
-    });
+  });
   </script>
 </body>
 </html>
