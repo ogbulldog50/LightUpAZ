@@ -186,14 +186,21 @@
 
           const markerStyleClean = (markerStyle || '').replace(/[^\w]/g, '').toLowerCase();
           let iconType = icons.Default;
+          
           const key = Object.keys(icons).find(k =>
             markerStyleClean.includes(k.toLowerCase())
           );
           if (key) iconType = icons[key];
-          if (name.toLowerCase().includes('prickly guy')) iconType = icons.Prickly;
-
-          // ⭐ Force all pumpkins to Christmas trees ⭐
-          if (iconType === icons.Halloween) {
+          
+          if (name.toLowerCase().includes('prickly guy')) {
+            iconType = icons.Prickly;
+          }
+          
+          // ⭐ Convert pumpkins/halloween styles→ snowflakes ⭐
+          if (
+            markerStyleClean.includes('pumpkin') ||
+            markerStyleClean.includes('halloween')
+          ) {
             iconType = icons.Snowflake;
           }
           const html = `
