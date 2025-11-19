@@ -21,12 +21,12 @@
       width: 220px;
       border: none;
     }
-.emoji-marker {
-  font-size: 40px; /* base size, overwritten dynamically */
-  text-align: center;
-  line-height: 1;
-  user-select: none;
-}
+    .emoji-marker {
+      font-size: 40px;
+      text-align: center;
+      line-height: 1;
+      user-select: none;
+    }
 
     #filter-bar {
       position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
@@ -39,128 +39,107 @@
       cursor: pointer; font-weight: 600;
     }
     #filter-bar button.active { background: #0f8a7c; color: white; }
+
     html, body {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  width: 100%;
-  overflow: hidden;   /* no scrollbars */
-}
-#map {
-  height: 100vh;
-  width: 100vw;
-}
+      margin: 0; padding: 0; height: 100%; width: 100%;
+      overflow: hidden;
+    }
+    #map {
+      height: 100vh; width: 100vw;
+    }
 
-/* Back to App button */
-#return-btn {
-  position: absolute;
-  bottom: 15px;
-  left: 15px;
-  z-index: 1000;
-  background-color: #0f8a7c;
-  color: white;
-  padding: 8px 12px;
-  border-radius: 8px;
-  font-family: system-ui, sans-serif;
-  font-weight: 600;
-  text-decoration: none;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-  transition: background 0.2s ease;
-}
-#return-btn:hover {
-  background-color: #0c6e64;
-}
-
+    #return-btn {
+      position: absolute;
+      bottom: 15px; left: 15px;
+      z-index: 1000;
+      background-color: #0f8a7c;
+      color: white;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-family: system-ui, sans-serif;
+      font-weight: 600;
+      text-decoration: none;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      transition: background 0.2s ease;
+    }
+    #return-btn:hover { background-color: #0c6e64; }
   </style>
 </head>
+
 <body>
   <div id="filter-bar">
     <button data-filter="All" class="active">🌎 All</button>
     <button data-filter="Halloween">🎃 Halloween</button>
     <button data-filter="Christmas">🎄 Christmas</button>
   </div>
-  <!-- Return to App Button -->
-<a href="https://www.jotform.com/app/252827227715158" id="return-btn">⬅ Back to App</a>
-<div id="map"></div>
 
+  <a href="https://www.jotform.com/app/252827227715158" id="return-btn">⬅ Back to App</a>
+  <div id="map"></div>
 
   <script>
     const sheetUrl = 'https://docs.google.com/spreadsheets/d/1c3Lj6l6bJN3fnhpAxWXkb0C5HW4hGxSWnvsOJXObYz0/gviz/tq?tqx=out:csv';
 
-    // ====== BASE MAPS ======
-  const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom:19, attribution:'© OpenStreetMap'
-  });
-  const cartoLight = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-    maxZoom:19, attribution:'© OpenStreetMap & CARTO'
-  });
-  const esriStreets = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
-    maxZoom:19, attribution:'Tiles © Esri'
-  });
-  const esriImagery = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-    maxZoom:19, attribution:'Imagery © Esri'
-  });
-  const googleSat = L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
-    maxZoom:20, attribution:'© Google Satellite (unofficial)'
-  });
-  const googleHybrid = L.tileLayer('https://mt1.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}', {
-    maxZoom:20, attribution:'© Google Hybrid (unofficial)'
-  });
+    // ===== Base map layers =====
+    const roads = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 18, attribution: '© OpenStreetMap contributors'
+    });
+    const satellite = L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+      maxZoom: 20, attribution: '© Google Satellite'
+    });
+    const hybrid = L.layerGroup([
+      L.tileLayer('https://mt1.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}', { maxZoom: 20 })
+    ]);
 
-  const baseMaps = {
-    "☀️ Carto Light": cartoLight,
-    "🧭 Esri Streets": esriStreets,
-    "🛰 Esri Imagery": esriImagery,
-    "🗺 OSM Roads": osm,
-    "🛰 Google Satellite": googleSat,
-    "🌎 Google Hybrid": googleHybrid
-  };
+    const esriStreets = L.tileLayer(
+      'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+      { maxZoom: 19, attribution: 'Tiles © Esri' }
+    );
 
-  const map = L.map('map', { center:[33.4652,-112.0780], zoom:10, layers:[cartoLight] });
-  L.control.layers(baseMaps).addTo(map);
+    const map = L.map('map', { center: [33.4652,-112.0780], zoom: 10, layers: [esriStreets] });
 
+    const baseMaps = {
+      "🛰 Satellite": satellite,
+      "🗺 Roads": roads,
+      "🧭 Esri Streets": esriStreets,
+      "🌎 Hybrid": hybrid
+    };
+    L.control.layers(baseMaps).addTo(map);
 
-   // ===== Icons =====
-const size = [52, 52]; // doubled size
-const icons = {
-  Christmas: L.divIcon({ html: '🎄', className: 'emoji-marker', iconSize: size }),
-  Halloween: L.divIcon({ html: '🎃', className: 'emoji-marker', iconSize: size }),
-  Default:   L.divIcon({ html: '⭐', className: 'emoji-marker', iconSize: size }),
-  Cactus:    L.divIcon({ html: '🌵', className: 'emoji-marker', iconSize: size }),
-  BlueBulb:  L.divIcon({ html: '💡', className: 'emoji-marker', iconSize: size }),
-  RedBulb:   L.divIcon({ html: '❤️', className: 'emoji-marker', iconSize: size }),
-  Snowflake: L.divIcon({ html: '❄️', className: 'emoji-marker', iconSize: size }),
-  Candle:    L.divIcon({ html: '🕯️', className: 'emoji-marker', iconSize: size }),
-  Gift:      L.divIcon({ html: '🎁', className: 'emoji-marker', iconSize: size }),
-  Mittens:   L.divIcon({ html: '🧤', className: 'emoji-marker', iconSize: size }),
-  Disco:     L.divIcon({ html: '🪩', className: 'emoji-marker', iconSize: size }),
-  Bell:      L.divIcon({ html: '🔔', className: 'emoji-marker', iconSize: size }),
-  MapPin:    L.divIcon({ html: '📍', className: 'emoji-marker', iconSize: size }),
-  Reindeer:  L.divIcon({ html: '🦌', className: 'emoji-marker', iconSize: size }),
+    // ===== Icons =====
+    const size = [52, 52];
+    const icons = {
+      Christmas: L.divIcon({ html: '🎄', className: 'emoji-marker', iconSize: size }),
+      Halloween: L.divIcon({ html: '🎃', className: 'emoji-marker', iconSize: size }),
+      Default:   L.divIcon({ html: '⭐', className: 'emoji-marker', iconSize: size }),
+      Cactus:    L.divIcon({ html: '🌵', className: 'emoji-marker', iconSize: size }),
+      BlueBulb:  L.divIcon({ html: '💡', className: 'emoji-marker', iconSize: size }),
+      RedBulb:   L.divIcon({ html: '❤️', className: 'emoji-marker', iconSize: size }),
+      Snowflake: L.divIcon({ html: '❄️', className: 'emoji-marker', iconSize: size }),
+      Candle:    L.divIcon({ html: '🕯️', className: 'emoji-marker', iconSize: size }),
+      Gift:      L.divIcon({ html: '🎁', className: 'emoji-marker', iconSize: size }),
+      Mittens:   L.divIcon({ html: '🧤', className: 'emoji-marker', iconSize: size }),
+      Disco:     L.divIcon({ html: '🪩', className: 'emoji-marker', iconSize: size }),
+      Bell:      L.divIcon({ html: '🔔', className: 'emoji-marker', iconSize: size }),
+      MapPin:    L.divIcon({ html: '📍', className: 'emoji-marker', iconSize: size }),
+      Reindeer:  L.divIcon({ html: '🦌', className: 'emoji-marker', iconSize: size }),
+      Prickly: L.icon({
+        iconUrl: 'https://assets.zyrosite.com/cdn-cgi/image/format=auto,w=375,fit=crop,q=95/mePnLngKpEilPJ97/1-removebg-preview-Aq2oqja477SbapQJ.png',
+        iconSize: [50, 50], iconAnchor: [25, 50], popupAnchor: [0, -30],
+      }),
+    };
 
-  // --- Your custom logo ---
-  Prickly: L.icon({
-    iconUrl: 'https://assets.zyrosite.com/cdn-cgi/image/format=auto,w=375,fit=crop,q=95/mePnLngKpEilPJ97/1-removebg-preview-Aq2oqja477SbapQJ.png',
-    iconSize: [50, 50],
-    iconAnchor: [25, 50],
-    popupAnchor: [0, -30],
-  }),
-};
+    const style = document.createElement('style');
+    style.innerHTML = `
+      .emoji-marker {
+        font-size: 36px;
+        line-height: 36px;
+        text-align: center;
+        transform: translateY(10px);
+      }
+    `;
+    document.head.appendChild(style);
 
-// --- Uniform popup offset for all emoji markers ---
-const style = document.createElement('style');
-style.innerHTML = `
-  .emoji-marker {
-    font-size: 36px;
-    line-height: 36px;
-    text-align: center;
-    transform: translateY(10px); /* lowers popup point */
-  }
-`;
-document.head.appendChild(style);
-
-const markers = [];
-
+    const markers = [];
 
     // ===== Fetch Sheet =====
     Papa.parse(sheetUrl, {
@@ -193,24 +172,18 @@ const markers = [];
 
           if (isNaN(lat) || isNaN(lon)) return;
 
-          // Links
           const rfLink = rf ? `<a href="${rf}" target="_blank">Remote Falcon</a>` : '';
           const pmLink = pm ? `<a href="${pm}" target="_blank">PulseMesh</a>` : '';
           const fmLine = fm ? `<strong>FM Station: ${fm} FM</strong>` : '';
-
-
-
           const mapsLink = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`;
 
           const embed = (url) => {
             const idMatch = url?.match(/[-\w]{25,}/);
             return idMatch
-              ? `<iframe src="https://drive.google.com/file/d/${idMatch[0]}/preview"
-                        width="220" height="160"></iframe>`
+              ? `<iframe src="https://drive.google.com/file/d/${idMatch[0]}/preview" width="220" height="160"></iframe>`
               : '';
           };
 
-          // Pick icon (robust normalization)
           const markerStyleClean = (markerStyle || '').replace(/[^\w]/g, '').toLowerCase();
           let iconType = icons.Default;
           const key = Object.keys(icons).find(k =>
@@ -218,7 +191,6 @@ const markers = [];
           );
           if (key) iconType = icons[key];
           if (name.toLowerCase().includes('prickly guy')) iconType = icons.Prickly;
-
 
           const html = `
             <div class="popup-content">
@@ -238,10 +210,14 @@ const markers = [];
           const marker = L.marker([lat, lon], { icon: iconType })
             .addTo(map)
             .bindPopup(html);
-            makeBounceOnClick(marker);
+
+          makeBounceOnClick(marker);
 
           markers.push({ marker, holiday });
         });
+
+        // ⭐ FORCE DEFAULT FILTER: CHRISTMAS
+        applyChristmasDefault();
       }
     });
 
@@ -250,64 +226,72 @@ const markers = [];
       btn.addEventListener('click', () => {
         document.querySelectorAll('#filter-bar button').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
+
         const filter = btn.dataset.filter;
+
         markers.forEach(({ marker, holiday }) => {
           const show = filter === 'All' || holiday.toLowerCase().includes(filter.toLowerCase());
           if (show) marker.addTo(map);
           else map.removeLayer(marker);
         });
-// ===== Adaptive Emoji Scaling =====
-map.on('zoomend', () => {
-  const zoom = map.getZoom();
-  const baseSize = 28; // minimum size for zoomed-out view
-  const scaledSize = baseSize + (zoom * 1.8); // smooth growth
-  document.querySelectorAll('.emoji-marker').forEach(el => {
-    el.style.fontSize = `${scaledSize}px`;
-  });
-});
 
+        // Resize icons on zoom
+        map.on('zoomend', () => {
+          const zoom = map.getZoom();
+          const baseSize = 28;
+          const scaledSize = baseSize + (zoom * 1.8);
+          document.querySelectorAll('.emoji-marker').forEach(el => {
+            el.style.fontSize = `${scaledSize}px`;
+          });
+        });
       });
     });
- // ===== Tap Bounce Animation (reliable version) =====
 
-// 1️⃣ CSS for bounce
-const bounceStyle = document.createElement('style');
-bounceStyle.innerHTML = `
-  @keyframes marker-bounce {
-    0%   { transform: translateY(0) scale(1); }
-    30%  { transform: translateY(-10px) scale(1.15); }
-    60%  { transform: translateY(0) scale(1); }
-    100% { transform: translateY(0); }
-  }
-  .bouncing {
-    animation: marker-bounce 0.4s ease;
-  }
-`;
-document.head.appendChild(bounceStyle);
+    // ===== Bounce animation =====
+    const bounceStyle = document.createElement('style');
+    bounceStyle.innerHTML = `
+      @keyframes marker-bounce {
+        0%   { transform: translateY(0) scale(1); }
+        30%  { transform: translateY(-10px) scale(1.15); }
+        60%  { transform: translateY(0) scale(1); }
+        100% { transform: translateY(0); }
+      }
+      .bouncing {
+        animation: marker-bounce 0.4s ease;
+      }
+    `;
+    document.head.appendChild(bounceStyle);
 
-// 2️⃣ Attach to each marker after creation
-function makeBounceOnClick(marker) {
-  marker.on('click', (e) => {
-    const el = e.target._icon;
-    if (!el) return;
-    el.classList.add('bouncing');
-    setTimeout(() => el.classList.remove('bouncing'), 400);
-  });
-}
+    function makeBounceOnClick(marker) {
+      marker.on('click', (e) => {
+        const el = e.target._icon;
+        if (!el) return;
+        el.classList.add('bouncing');
+        setTimeout(() => el.classList.remove('bouncing'), 400);
+      });
+    }
 
+    // ⭐⭐⭐ FORCE CHRISTMAS DEFAULT + HIDE OTHER FILTERS ⭐⭐⭐
+    function applyChristmasDefault() {
 
-  
+      // Hide Halloween + All buttons
+      document.querySelector('#filter-bar button[data-filter="Halloween"]').style.display = 'none';
+      document.querySelector('#filter-bar button[data-filter="All"]').style.display = 'none';
+
+      // Force Christmas as active
+      const christmasBtn = document.querySelector('#filter-bar button[data-filter="Christmas"]');
+      document.querySelectorAll('#filter-bar button').forEach(b => b.classList.remove('active'));
+      christmasBtn.classList.add('active');
+
+      // Apply filter now that markers exist
+      const filter = 'Christmas';
+      markers.forEach(({ marker, holiday }) => {
+        const show = holiday.toLowerCase().includes(filter.toLowerCase());
+        if (show) marker.addTo(map);
+        else map.removeLayer(marker);
+      });
+    }
+
   </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
