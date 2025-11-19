@@ -192,6 +192,10 @@
           if (key) iconType = icons[key];
           if (name.toLowerCase().includes('prickly guy')) iconType = icons.Prickly;
 
+          // ⭐ Force all pumpkins to Christmas trees ⭐
+          if (iconType === icons.Halloween) {
+            iconType = icons.Snowflake;
+          }
           const html = `
             <div class="popup-content">
               <b>${name}</b><br>
